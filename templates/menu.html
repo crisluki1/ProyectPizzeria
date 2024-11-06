@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menú de Pizzas</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('login') }}">Login</a></li>
+                <li><a href="{{ url_for('register') }}">Register</a></li>
+                <li><a href="{{ url_for('menu') }}">Menu</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <h2>Menú de Pizzas</h2>
+        <div class="menu-container" id="pizza-menu">
+            <!-- Las pizzas se cargarán aquí dinámicamente -->
+        </div>
+
+        <!-- Apartado del carrito -->
+        <div class="cart-container" id="cart-container">
+            <h3>Carrito</h3>
+            <ul id="cart-items"></ul>
+            <div class="total">
+                Total: <span id="total-price">€0.00</span>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <p>Creado por Crisluki</p>
+            <p>Contacto: <a href="mailto:tu_email@example.com">tu_email@example.com</a></p>
+            <p>&copy; <span id="current-year"></span> Todos los derechos reservados.</p>
+        </div>
+    </footer>
+    
+    <script>
+        // Agrega el año actual al footer
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+
+    <script>
+        // Simulando la llamada a la API para obtener las pizzas
+        fetch('/api/pizzas')
+        .then(response => response.json())
+        .then(pizzas => {
+            const menuContainer = document.getElementById('pizza-menu');
+            pizzas.forEach(pizza => {
+                const pizzaCard = document.createElement('div');
+                pizzaCard.classList.add('pizza-card');
+                pizzaCard.innerHTML = `
+                    <h3>${pizza.name}</h3>
+                    <img src="${pizza.image_url}" alt="${pizza.name}" class="pizza-image">
+                    <ul>
+                        ${pizza.ingredients.map(ingredient => `<li>${ingredient}</li>`).join('')}
+                    </ul>
+                    <div class="price">€${pizza.price.toFixed(2)}</div>
+                    <button class="add-to-cart" data-name="${pizza.name}" data-price="${pizza.price}">Añadir al Carrito</button>
+                `;
+                menuContainer.appendChild(pizzaCard);
+            });
+
+            // Añadir evento a los botones de "Añadir al Carrito"
+            const addToCartButtons = document.querySelectorAll('.add-to-cart');
+            addToCartButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const name = this.getAttribute('data-name');
+                    const price = parseFloat(this.getAttribute('data-price'));
+                    addToCart(name, price);
+                });
+            });
+        })
+        .catch(error => console.error('Error:', error));
+
+        // Variables para el carrito
+        const cartItems = [];
+        const cartItemsContainer = document.getElementById('cart-items');
+        const totalPriceElement = document.getElementById('total-price');
+
+        function addToCart(name, price) {
+            cartItems.push({ name, price });
+            updateCart();
+        }
+
+        function updateCart() {
+            // Limpiar la lista de artículos del carrito
+            cartItemsContainer.innerHTML = '';
+            let total = 0;
+
+            cartItems.forEach((item, index) => {
+                const li = document.createElement('li');
+                li.innerHTML = `${item.name} - €${item.price.toFixed(2)} <button class="remove-item" data-index="${index}">Eliminar</button>`;
+                cartItemsContainer.appendChild(li);
+                total += item.price;
+            });
+
+            totalPriceElement.textContent = `€${total.toFixed(2)}`;
+
+            // Añadir evento para eliminar artículos
+            const removeButtons = document.querySelectorAll('.remove-item');
+            removeButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const index = parseInt(this.getAttribute('data-index'));
+                    removeFromCart(index);
+                });
+            });
+        }
+
+        function removeFromCart(index) {
+            cartItems.splice(index, 1); // Eliminar el artículo
+            updateCart(); // Actualizar el carrito
+        }
+    </script>
+</body>
+</html>

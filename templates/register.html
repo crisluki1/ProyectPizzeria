@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='register.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h2>Registro</h2>
+        <form id="registerForm" class="register-form">
+            <label for="nombre">Nombre:</label>
+            <input type="text" id="nombre" name="nombre" required>
+
+            <label for="apellido">Apellido:</label>
+            <input type="text" id="apellido" name="apellido" required>
+
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required>
+
+            <label for="contrasena">Contraseña:</label>
+            <input type="password" id="contrasena" name="contrasena" required>
+
+            <button type="submit">Registrarse</button>
+        </form>
+        <p id="message" class="message"></p>
+        <p class="register-link">¿Ya tienes cuenta? <a href="{{ url_for('login') }}">Iniciar sesión</a></p>
+    </div>
+
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const email = document.getElementById('email').value;
+            const nombre = document.getElementById('nombre').value;
+            const apellido = document.getElementById('apellido').value;
+            const contrasena = document.getElementById('contrasena').value;
+
+            // URL de tu API Gateway que invoca la función Lambda
+            const lambdaUrl = 'https://z43oa7g4ttbytgbu4jxklkyqje0mxffs.lambda-url.us-east-1.on.aws/';
+
+            fetch(lambdaUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    operation: "register",
+                    email: email,
+                    nombre: nombre,
+                    apellido: apellido,
+                    contrasena: contrasena
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!undefined) {
+                    document.getElementById('message').textContent = '¡Registro exitoso!';
+                    document.getElementById('message').style.color = 'green';
+                    // Redirigir al usuario a la página de inicio de sesión después de un breve retraso
+                    setTimeout(() => {
+                        window.location.href = "{{ url_for('login') }}";
+                    }, 2000);
+                } else {
+                    document.getElementById('message').textContent = 'Error en el registro: ';
+                    document.getElementById('message').style.color = 'red';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('message').textContent = 'Error en la conexión. Por favor, intenta de nuevo más tarde.';
+                document.getElementById('message').style.color = 'red';
+            });
+        });
+    </script>
+</body>
+</html>

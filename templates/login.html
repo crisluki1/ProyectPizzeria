@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='login.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h2>Login</h2>
+        <form id="loginForm" class="login-form">
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required>
+
+            <label for="contrasena">Contraseña:</label>
+            <input type="password" id="contrasena" name="contrasena" required>
+
+            <button type="submit">Login</button>
+        </form>
+        <p id="message" class="message"></p>
+        <p class="register-link">¿No tienes cuenta? <a href="{{ url_for('register') }}">Registrarse</a></p>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const email = document.getElementById('email').value;
+    const contrasena = document.getElementById('contrasena').value;
+
+    const lambdaUrl = 'https://z43oa7g4ttbytgbu4jxklkyqje0mxffs.lambda-url.us-east-1.on.aws/';
+
+    fetch(lambdaUrl, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            operation: "login",
+            email: email,
+            contrasena: contrasena
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Convertir el body en JSON si es necesario
+        const responseBody = JSON.parse(data.body);
+
+        if (data.statusCode === 200) {
+            document.getElementById('message').textContent = '¡Login exitoso!';
+            document.getElementById('message').style.color = 'green';
+            setTimeout(() => {
+                window.location.href = "{{ url_for('menu') }}";
+            }, 2000);
+        } else if (data.statusCode === 401) {
+            document.getElementById('message').textContent = 'Error en el login: Contraseña incorrecta';
+            document.getElementById('message').style.color = 'red';
+        } else if (data.statusCode === 404) {
+            document.getElementById('message').textContent = 'Error en el login: Usuario no encontrado';
+            document.getElementById('message').style.color = 'red';
+        } else {
+            document.getElementById('message').textContent = 'Error en el servidor. Intenta de nuevo más tarde.';
+            document.getElementById('message').style.color = 'red';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        document.getElementById('message').textContent = 'Error en la conexión. Por favor, intenta de nuevo más tarde.';
+        document.getElementById('message').style.color = 'red';
+    });
+});
+    </script>
+</body>
+</html>
